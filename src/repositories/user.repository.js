@@ -1,8 +1,9 @@
+import promisePool from "../config/mysql.config.js";
 import User from "../models/User.model.js";
 import { ServerError } from "../utils/error.utils.js";
 
 class UserRepository {
-    async create({username,email,password,verification_token}){
+    /* async create({username,email,password,verification_token}){
         try{
             await User.create({username, email,password,verification_token})
         }
@@ -13,9 +14,33 @@ class UserRepository {
             throw error
         }
         
+    } */
+
+    async create({username,email,password,verification_token}){
+        try{
+            let queryStr =`
+            INSERT INTO users (username, email, password, verification_token)
+            VALUES (?, ?, ?, ?)
+            `
+            const [result] = await promisePool.execute(
+                queryStr, [
+                    username, 
+                    email, 
+                    password, 
+                    verification_token
+                ])
+                
+        }
+        catch(error){
+            if(error.code === 1100){
+                throw new ServerError("email aready registred", 400)
+            }
+            throw error
+        }
+        
     }
 
-    async VerifyUserByEmail(email){
+    /* async VerifyUserByEmail(email, verification_token){
     const user_found = await User.findOne({email: email})
     if(!user_found){
             throw new ServerError("usuario not found", 404 )
@@ -23,13 +48,41 @@ class UserRepository {
         if(user_found.verified){
             throw new ServerError("user has already been verified", 400)
         }
+        if(user_found.verification_token !== verification_token){
+            throw new ServerError("invalid verification token", 400)
+        }
+
         user_found.verified = true
         await user_found.save()
-    return user_found
-}
+        return user_found
+} */
+
+    async VerifyUserByEmail(email, verification_token){
+    const user_found = await this.findUserByEmail(email)
+    if(!user_found){
+            throw new ServerError("usuario not found", 404 )
+        }
+        if(user_found.verified){
+            throw new ServerError("user has already been verified", 400)
+        }
+        if(user_found.verification_token !== verification_token){
+            throw new ServerError("invalid verification token", 400)
+        }
+
+        const queryStr = `UPDATE users SET verified = 1 WHERE email = ? AND verification_token = ? `
+        await promisePool.execute(queryStr, [email, verification_token])
+
+        return user_found }
+
+   /*  async findUserByEmail(email){
+        return await User.findOne({email: email})
+    } */
 
     async findUserByEmail(email){
-        return await User.findOne({email: email})
+        const queryStr = `SELECT * FROM users WHERE email = ? `
+        const [result] = await promisePool.execute(queryStr, [email] )
+        
+        return result[0]
     }
 
     async changeUserPassword(id, newPassword){
@@ -43,6 +96,7 @@ class UserRepository {
 
 
 
+const userRepository = new UserRepository()
+userRepository.findUserByEmail("urielramirez665@gmail.com")
 
-
-export default new UserRepository()
+export default userRepository

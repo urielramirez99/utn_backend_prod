@@ -9,7 +9,13 @@ const ENVIROMENT = {
     GMAIL_USERNAME: process.env.GMAIL_USERNAME,
     GMAIL_PASSWORD: process.env.GMAIL_PASSWORD,
     URL_BACKEND: process.env.URL_BACKEND,
-    URL_FRONTEND: process.env.URL_FRONTEND
+    URL_FRONTEND: process.env.URL_FRONTEND,
+    MYSQL: {
+        DB_NAME: process.env.MYSQL_DB,
+        USERNAME: process.env.MYSQL_USER,
+        PASSWORD: process.env.MYSQL_PASSWORD,
+        HOST: process.env.MYSQL_HOST
+    }
 }
 
 
